@@ -2,13 +2,14 @@
 #include "BullCowCartridge.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
-#include "RandomStream.h"
  
 void UBullCowCartridge::BeginPlay() // When the game starts
 {
     Super::BeginPlay();
     const FString WordListPath = FPaths::ProjectContentDir() / TEXT("WordLists/HiddenWOrdList.txt");
     FFileHelper::LoadFileToStringArray(Words, *WordListPath);
+    // FFileHelper::LoadFileToStringArrayWithPredicate(Words, *WordListPath, [](const FString& Word) { return Word.Len() < 10; }) using a lambda function to only pass in words that pass
+    ValidWords = GetValidWords(Words);
     InitGame(); //setting up game
 
 }
@@ -34,12 +35,15 @@ void UBullCowCartridge::OnInput(const FString &Input) // When the player hits en
 
 void UBullCowCartridge::InitGame() {
     gameOver = false;
-    HiddenWord = TEXT("cake");
+    HiddenWord =ValidWords[FMath::RandRange(0, ValidWords.Num()-1)];  //set HiddenWord to a random word from a valid word list
     lives = HiddenWord.Len();
 
     PrintLine(TEXT("Welcome to Bull Cows"));
     PrintLine(TEXT("Guess the %i letter word"), HiddenWord.Len());
     PrintLine(TEXT("Press enter to continue..."));
+
+    // debug
+    PrintLine(TEXT("The hidden word is: %s"), *HiddenWord);
 }
 
 void UBullCowCartridge::EndGame() {
@@ -65,8 +69,10 @@ void UBullCowCartridge::ProcessGuess(const FString& Guess) {
         return;
     }
 
-    PrintLine(TEXT("Incorrect, try again! You have %s lives left."), lives);
+    FBullCowCount Score = GetBullCows(Guess);
+    PrintLine(TEXT("You have %i bulls, and %i cows"), Score.Bulls, Score.Cows);
     --lives;
+    PrintLine(TEXT("Incorrect, try again! You have %i lives left."), lives);
     return;
     
 }
@@ -83,7 +89,7 @@ bool UBullCowCartridge::IsIsogram(const FString& Word) const {
     return true;
 }
 
-TArray<FString> UBullCowCartridge::ValidWords(const TArray<FString>& WordList) const {
+TArray<FString> UBullCowCartridge::GetValidWords(const TArray<FString>& WordList) const {
     TArray<FString> ValidWordList;
 
     for (FString Word : WordList) {  // RANGE BASED FOR LOOP; works the same as a for in loop in python
@@ -92,4 +98,26 @@ TArray<FString> UBullCowCartridge::ValidWords(const TArray<FString>& WordList) c
         }
     }
     return ValidWordList;
+}
+
+FBullCowCount UBullCowCartridge::GetBullCows(const FString& Guess) const {
+   FBullCowCount Count; //new FBullCowCount structure
+
+    // for every index Guess is same as index HiddenWord, BullCOunt ++
+    // if not a bull was it a cow ? if yes CowCount ++
+
+    for (int32 GuessIndex = 0; GuessIndex < Guess.Len(); GuessIndex++) {
+        if (Guess[GuessIndex] == HiddenWord[GuessIndex]) {
+            Count.Bulls++;
+            continue;
+        }
+
+        for (int32 HiddenIndex = 0; HiddenIndex < HiddenWord.Len(); HiddenIndex++) {
+            if (Guess[GuessIndex] == HiddenWord[HiddenIndex]) {
+                Count.Cows++;
+                break;
+            }
+        }
+    }
+    return Count;
 }
