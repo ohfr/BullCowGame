@@ -13,8 +13,11 @@ void UBullCowCartridge::BeginPlay() // When the game starts
 
 }
 
-void UBullCowCartridge::OnInput(const FString &Input) // When the player hits enter
+void UBullCowCartridge::OnInput(const FString &Input) // When the player hits enter  constant Input REFERENCE 
 {
+    // int32 a = 0;
+    // int32& refa = a; int32 & refa = a; int32 &refa = a;  all are the same whitespace doesn't matter, first is standard, should use const with references const int32& refa = a;
+
     if (!gameOver) { // game running, check player guess
         if (lives == 0) {
             PrintLine(TEXT("You've ran out of lives"));
@@ -45,7 +48,7 @@ void UBullCowCartridge::EndGame() {
 
 }
 
-void UBullCowCartridge::ProcessGuess(FString Guess) {
+void UBullCowCartridge::ProcessGuess(const FString& Guess) {
     if (Guess == "") {
         PrintLine(TEXT("Please enter a guess!"));
         return;
@@ -68,7 +71,7 @@ void UBullCowCartridge::ProcessGuess(FString Guess) {
     
 }
 
-bool UBullCowCartridge::IsIsogram(FString Word) const {
+bool UBullCowCartridge::IsIsogram(const FString& Word) const {
     for (int32 i=0;i < Word.Len();i++) {
         for (int32 j=i+1; j < Word.Len();j++) {
             if (Word[i] == Word[j]) {
@@ -80,7 +83,7 @@ bool UBullCowCartridge::IsIsogram(FString Word) const {
     return true;
 }
 
-TArray<FString> UBullCowCartridge::ValidWords(TArray<FString> WordList) const {
+TArray<FString> UBullCowCartridge::ValidWords(const TArray<FString>& WordList) const {
     TArray<FString> ValidWordList;
 
     for (FString Word : WordList) {  // RANGE BASED FOR LOOP; works the same as a for in loop in python
